@@ -18,7 +18,19 @@ class SimpleServer():
             self.buffer = buffer
             self.lastcheck = lastcheck
 
-    EVENT = Enum("EVENT", "NEWPLAYER PLAYERLEFT MESSAGE")
+    class Event():
+        """An event, like a player connects or disconnects."""
+        def __init__(self, etype, content):
+            self.etype = etype
+            self.content = content
+
+        def __repr__(self):
+            return str(self)
+
+        def __str__(self):
+            return "<Event: " + str(self.etype) + ">"
+
+    ETYPE = Enum("ETYPE", "NEWPLAYER PLAYERLEFT MESSAGE")
     _READSTATE = Enum("_READSTATE", "NORMAL MESSAGE SUBNEG")
 
     class _TN(Enum):
@@ -68,6 +80,11 @@ class SimpleServer():
         """Send a message to a client."""
         self._attempt_send(cid, message + "\n\r")
 
+    def _add_event(self, etype, *content):
+        """Add an event to the queue."""
+        event = self.Event(etype, content)
+        self._events.append(event)
+
     def _update_new_connections(self):
         """Check for new connections."""
         rlist, wlist, xlist = select.select([self._listen_socket], [], [], 0)
@@ -79,7 +96,7 @@ class SimpleServer():
         client_socket.setblocking(False)
 
         self._clients[self._nextid] = SimpleServer._Client(client_socket, client_addr[0], "", time.time())
-        self._events.append((self.EVENT.NEWPLAYER, self._nextid))
+        self._add_event(self.ETYPE.NEWPLAYER, self._nextid)
 
         self._nextid += 1
 
@@ -106,7 +123,7 @@ class SimpleServer():
                 message = self._process_send_data(cl, data)
                 if message:
                     message = message.strip()
-                    self._events.append((self.EVENT.MESSAGE, cid, message))
+                    self._add_event(self.ETYPE.MESSAGE, cid, message)
             except socket.error:
                 self._handle_disconnect(cid)
 
@@ -122,7 +139,7 @@ class SimpleServer():
     def _handle_disconnect(self, cid):
         """Do the actual disconnect."""
         del(self._clients[cid])
-        self._events.append((self.EVENT.PLAYERLEFT, cid))
+        self._add_event(self.ETYPE.PLAYERLEFT, cid)
 
     def _process_send_data(self, cl, data):
         """Process the received data and filter any telnet commands."""
