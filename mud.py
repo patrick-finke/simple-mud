@@ -34,4 +34,4 @@ while True:
                     mudserver.send_message(pid, str(fromid) + ": " + message)
 
 
-        time.sleep(.2)
+        time.sleep(.5)
