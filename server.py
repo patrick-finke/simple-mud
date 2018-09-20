@@ -29,8 +29,8 @@ class SimpleServer():
         WONT = 252
         DO = 253
         DONT = 254
-        SUBNEGOTIATION_START = 250
-        SUBNEGOTIATION_END = 240
+        SUBNEG_START = 250
+        SUBNEG_END = 240
 
     def __init__(self, ip, port, timeout=5.):
         self.ip = ip
@@ -138,14 +138,14 @@ class SimpleServer():
                 else:
                     cl.buffer += c
             elif state == self._READSTATE.MESSAGE:
-                if ord(c) == self._TN.SUBNEGOTIATION_START:
+                if ord(c) == self._TN.SUBNEG_START:
                     state = self._READSTATE.SUBNEG
                 elif ord(c) in (self._TN.WILL, self._TN.WONT, self._TN.DO, self._TN.DONT):
                     state = self._READSTATE.MESSAGE
                 else:
                     state = self._READSTATE.NORMAL
             elif state == self._READSTATE.SUBNEG:
-                if ord(c) == self._TN.SUBNEGOTIATION_END:
+                if ord(c) == self._TN.SUBNEG_END:
                     state = self._READSTATE.NORMAL
 
         return message
