@@ -47,6 +47,10 @@ class SimpleServer():
         self._listen_socket.setblocking(False)
         self._listen_socket.listen(1)
 
+    def get_ids(self):
+        """Return a list of all client ids."""
+        return list(self._clients.keys())
+
     def update(self):
         """Update the state of the server. This should be called once per game loop."""
         self._update_new_connections()
