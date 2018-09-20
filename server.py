@@ -60,9 +60,9 @@ class SimpleServer():
         except IndexError:
             return None
 
-    def send_message(self, to, message):
+    def send_message(self, cid, message):
         """Send a message to a client."""
-        self._attempt_send(to, message + "\n\r")
+        self._attempt_send(cid, message + "\n\r")
 
     def _update_new_connections(self):
         """Check for new connections."""
