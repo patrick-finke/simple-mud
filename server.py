@@ -18,12 +18,12 @@ class SimpleServer():
             self.buffer = buffer
             self.lastcheck = lastcheck
 
-    EVENT = Enum("EVENT", "NEWPLAYER PLAYERLEFT COMMAND")
-    _READSTATE = Enum("_READSTATE", "NORMAL COMMAND SUBNEG")
+    EVENT = Enum("EVENT", "NEWPLAYER PLAYERLEFT MESSAGE")
+    _READSTATE = Enum("_READSTATE", "NORMAL MESSAGE SUBNEG")
 
     class _TN(Enum):
         """Codes used in the telnet protocol."""
-        INTERPRET_AS_COMMAND = 255
+        INTERPRET_AS_MESSAGE = 255
         ARE_YOU_THERE = 246
         WILL = 251
         WONT = 252
@@ -102,7 +102,7 @@ class SimpleServer():
                 message = self._process_send_data(cl, data)
                 if message:
                     message = message.strip()
-                    self._events.append((self.EVENT.COMMAND, cid, message))
+                    self._events.append((self.EVENT.MESSAGE, cid, message))
             except socket.error:
                 self._handle_disconnect(cid)
 
@@ -127,8 +127,8 @@ class SimpleServer():
 
         for c in data:
             if state == self._READSTATE.NORMAL:
-                if ord(c) == self._TN.INTERPRET_AS_COMMAND:
-                    state = self._READSTATE.COMMAND
+                if ord(c) == self._TN.INTERPRET_AS_MESSAGE:
+                    state = self._READSTATE.MESSAGE
                 elif c == "\n":
                     message = cl.buffer
                     cl.buffer = ""
@@ -137,11 +137,11 @@ class SimpleServer():
 
                 else:
                     cl.buffer += c
-            elif state == self._READSTATE.COMMAND:
+            elif state == self._READSTATE.MESSAGE:
                 if ord(c) == self._TN.SUBNEGOTIATION_START:
                     state = self._READSTATE.SUBNEG
                 elif ord(c) in (self._TN.WILL, self._TN.WONT, self._TN.DO, self._TN.DONT):
-                    state = self._READSTATE.COMMAND
+                    state = self._READSTATE.MESSAGE
                 else:
                     state = self._READSTATE.NORMAL
             elif state == self._READSTATE.SUBNEG:
