@@ -52,7 +52,7 @@ class SimpleServer():
         self._clients = {}
         self._nextid = 0
         self._events = []
-        
+
         self._listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._listen_socket.bind((ip, port))
@@ -111,6 +111,7 @@ class SimpleServer():
 
     def _update_messages(self):
         """Check for new messages."""
+        disconnects = []
         for cid, cl in self._clients.items():
             rlist, wlist, xlist = select.select([cl.socket], [], [], 0)
 
@@ -125,7 +126,10 @@ class SimpleServer():
                     message = message.strip()
                     self._add_event(self.ETYPE.MESSAGE, cid, message)
             except socket.error:
-                self._handle_disconnect(cid)
+                disconnects.append(cid)
+
+        for cid in disconnects:
+            self._handle_disconnect(cid)
 
     def _attempt_send(self, cid, data):
         """Try to send data. Disconnect the client of failure."""
